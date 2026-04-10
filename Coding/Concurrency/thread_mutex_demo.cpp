@@ -8,7 +8,7 @@ using namespace std;
 // 这是一个全局变量，所有线程都能访问它。每次修改 counter 时，都必须先锁住 mtx，修改完成后再解锁。
 // mutex 是一个标准库提供的互斥量类，用于线程间同步。
 // 它确保在任意时刻，只有一个线程可以访问临界区（代码），避免了竞态条件。
-mutex mtx;  // mtx的值是默认的，没有被初始化。
+mutex mtx; // 默认构造的互斥量
 
 // 共享变量，多个线程都会对它进行累加。
 int counter = 0;
@@ -56,7 +56,7 @@ int main() {
         // void (*ptr)(int, int) = increment;  // 自动转换
         //                             ↑
         //                        不需要 &increment
-    threads.emplace_back(increment, i, 10);        // emplace_back是vector的成员函数，用于在向量末尾创建一个新元素。
+        threads.emplace_back(increment, i, 10);        // emplace_back是vector的成员函数，用于在向量末尾创建一个新元素。
     }
 
     // 等待所有线程执行完毕。
