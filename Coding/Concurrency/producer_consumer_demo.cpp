@@ -14,9 +14,9 @@ using namespace std;
 // 全局互斥量，用于保护共享数据的访问
 mutex mtx;
 // 条件变量，用于线程间通信（通知机制）
-condition_variable cv;
+condition_variable cv;  // condition_variable类型是条件变量，用于线程间通信
 // 共享数据队列，用于存储生产者生产的数据
-queue<int> data_queue;
+queue<int> data_queue;  // queue<int>类型是整数队列，用于存储生产者生产的数据
 // 标志变量，指示生产者是否完成生产
 bool done = false;
 
@@ -24,7 +24,7 @@ bool done = false;
 void producer() {
     // 生产10个数据
     for (int i = 0; i < 10; i++) {
-        // 作用域：限制锁的范围
+        // 作用域：限制锁的范围，锁的是mtx互斥量 ，确保在生产数据时互斥，一次只有一个生产者线程可以访问队列
         { 
             // 创建lock_guard对象，自动管理锁的获取和释放
             lock_guard<mutex> lock(mtx);
@@ -34,12 +34,16 @@ void producer() {
             cout << "Produced: " << i << endl;
         } // 自动释放锁
         
+        // 时间点5: producer 生产数据，通知 consumer
+        cout << "时间点5: producer 生产数据 " << i << "，通知 consumer" << endl;
         // 通知等待的消费者线程
-        cv.notify_one();
+        cv.notify_one();    // 作用 ：通知等待在条件变量上的消费者线程，有新数据可供消费
         // 模拟生产过程的耗时
         this_thread::sleep_for(chrono::milliseconds(100));
     }
     
+    // 时间点7: producer 完成生产，设置 done = true
+    cout << "时间点7: producer 完成生产，设置 done = true" << endl;
     // 生产完成后，设置done标志
     { 
         lock_guard<mutex> lock(mtx);
@@ -47,7 +51,7 @@ void producer() {
     } // 自动释放锁
     
     // 通知消费者生产已完成
-    cv.notify_one();
+    cv.notify_one();    // 作用 ：通知等待在条件变量上的消费者线程，生产已完成
 }
 
 // 消费者函数：负责从队列中获取并消费数据
@@ -63,9 +67,13 @@ void consumer() {
         
         // 检查是否生产完成且队列为空
         if (done && data_queue.empty()) {
+            // 时间点10: consumer 处理完所有数据，检测到 done && empty，退出循环
+            cout << "时间点10: consumer 处理完所有数据，检测到 done && empty，退出循环" << endl;
             break; // 退出循环
         }
         
+        // 时间点6: consumer 被唤醒，消费数据
+        cout << "时间点6: consumer 被唤醒，消费数据" << endl;
         // 从队列中获取数据
         int value = data_queue.front();
         data_queue.pop(); // 从队列中移除
@@ -77,18 +85,32 @@ void consumer() {
 
 // 主函数
 int main() {
+    // 时间点1: 主线程开始执行 main()
+    cout << "时间点1: 主线程开始执行 main()" << endl;
+    
     // 创建生产者线程
-    thread producer_thread(producer);
+    cout << "时间点2: 创建 producer_thread，开始执行 producer()" << endl;
+    // producer_thread是生产者线程对象，用于生产数据
+    thread producer_thread(producer);   // thread类型是线程对象，用于创建和管理线程，producer是线程函数，用于生产数据
+    
     // 创建消费者线程
-    thread consumer_thread(consumer);
+    cout << "时间点3: 创建 consumer_thread，开始执行 consumer()" << endl;
+    thread consumer_thread(consumer);  // thread类型是线程对象，用于创建和管理线程，consumer是线程函数，用于消费数据
     
     // 等待生产者线程完成
+    cout << "时间点4: 主线程调用 producer_thread.join()，开始等待" << endl;
     producer_thread.join();
+    cout << "时间点8: producer_thread 结束" << endl;
+    
     // 等待消费者线程完成
+    cout << "时间点9: 主线程继续执行，调用 consumer_thread.join()" << endl;
     consumer_thread.join();
+    cout << "时间点11: consumer_thread 结束" << endl;
     
     // 输出完成信息
+    cout << "时间点12: 主线程继续执行，输出 \"Done\"" << endl;
     cout << "Done" << endl;
+    cout << "时间点13: 主线程结束" << endl;
     
     // 返回0表示程序正常结束
     return 0;
