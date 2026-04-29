@@ -1,0 +1,13 @@
+{
+    "code-runner.executorMap": {
+        "cpp": "cd $dir && g++ -std=c++20 \"$fileName\" -o \"$fileNameWithoutExt.exe\" && \"$fileNameWithoutExt.exe\""
+    },
+    "files.exclude": {
+        "**/*.exe": true,
+        "build": true
+    },
+    "search.exclude": {
+        "**/*.exe": true,
+        "build": true
+    }
+}
